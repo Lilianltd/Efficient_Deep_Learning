@@ -1,2 +1,1 @@
-# Efficient_Deep_Learning
-Efficient deep learning IMT Atlantique project
+# Train cifar10 with PyTorch
