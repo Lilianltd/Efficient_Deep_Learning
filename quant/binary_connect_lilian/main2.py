@@ -1,5 +1,5 @@
 import torch
-from main import mixup_criterion, mixup_data, load_data
+from train_routine_lilian.main import mixup_criterion, mixup_data, load_data
 '''Train CIFAR10 with PyTorch.'''
 import torch.nn as nn
 import torch.optim as optim
