@@ -1,0 +1,2 @@
+source /opt/img/effdl-venv/bin/activate
+# kill -9 numeroduprogrammestyle234590
