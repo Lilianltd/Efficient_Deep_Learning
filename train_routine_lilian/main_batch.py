@@ -1,5 +1,4 @@
 from models import *
-import os
 from main import main
 
 net_test = [MobileNetV2()

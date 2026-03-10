@@ -1,7 +1,7 @@
 import torch
 import torchinfo
 
-def load_model(path, ModelClass, model_kwargs):
+def load_model(path : str, ModelClass, model_kwargs):
     loaded_cpt = torch.load(path)
     model = ModelClass(**model_kwargs)
     
@@ -15,7 +15,7 @@ def load_model(path, ModelClass, model_kwargs):
     
     return model
 
-def score(model, ps, pu, qw, qa):
+def score(model, ps : float, pu : float, qw: float, qa: float) -> float:
     model_ori_size = 11173962/2
     model_ori_compute_ops = 555432330/2
     input_data = torch.randn(1, 3, 32, 32).to("cuda").to(torch.float16)
