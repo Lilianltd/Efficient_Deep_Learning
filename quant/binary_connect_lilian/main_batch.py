@@ -1,5 +1,4 @@
 from models import *
-import os
 from quant.binary_connect_lilian.main2 import main
 
 net_test = [VGG('VGG19'),  ResNet18(),  PreActResNet18(),  GoogLeNet(), densenet_cifar(), DenseNet121(), ResNeXt29_2x64d(), MobileNet()
