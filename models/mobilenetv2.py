@@ -7,6 +7,60 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import torch.nn as nn
+
+class MobileNetV2_Custom(nn.Module):
+    def __init__(self, num_classes=10, width_mult=1.0, depth_mult=1.0):
+        super(MobileNetV2_Custom, self).__init__()
+        # Base configuration
+        base_cfg = [
+            (1,  16, 1, 1),
+            (6,  24, 2, 1), 
+            (6,  32, 3, 2),
+            (6,  64, 4, 2),
+            (6,  96, 3, 1),
+            (6, 160, 3, 2),
+            (6, 320, 1, 1)
+        ]
+
+        # 1. Apply Width Multiplier to initial and final layers
+        input_channel = int(32 * width_mult)
+        last_channel = int(1280 * width_mult)
+        
+        self.conv1 = nn.Conv2d(3, input_channel, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(input_channel)
+        
+        self.cfg = []
+        for expansion, out_planes, num_blocks, stride in base_cfg:
+            new_out = int(out_planes * width_mult)
+            new_blocks = max(1, int(num_blocks * depth_mult)) 
+            self.cfg.append((expansion, new_out, new_blocks, stride))
+
+        self.layers = self._make_layers(in_planes=input_channel)
+        
+        self.conv2 = nn.Conv2d(self.cfg[-1][1], last_channel, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn2 = nn.BatchNorm2d(last_channel)
+        self.linear = nn.Linear(last_channel, num_classes)
+
+    def _make_layers(self, in_planes):
+        layers = []
+        for expansion, out_planes, num_blocks, stride in self.cfg:
+            strides = [stride] + [1]*(num_blocks-1)
+            for s in strides:
+                layers.append(Block(in_planes, out_planes, expansion, s))
+                in_planes = out_planes
+        return nn.Sequential(*layers)
+    
+    def forward(self, x):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.layers(out)
+        out = F.relu(self.bn2(self.conv2(out)))
+        # NOTE: change pooling kernel_size 7 -> 4 for CIFAR10
+        out = F.avg_pool2d(out, 4)
+        out = out.view(out.size(0), -1)
+        out = self.linear(out)
+        return out
+
 
 class Block(nn.Module):
     '''expand + depthwise + pointwise'''

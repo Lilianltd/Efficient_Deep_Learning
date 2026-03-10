@@ -1,0 +1,1 @@
+source /opt/img/effdl-venv/bin/activate

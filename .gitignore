@@ -1,0 +1,6 @@
+*/__pycache__/*
+__pycache__/*
+checkpoint/*
+data/*
+.venv
+runs
