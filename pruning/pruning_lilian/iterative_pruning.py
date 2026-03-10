@@ -40,7 +40,7 @@ if __name__ == "__main__":
                 element = {'net' : model, 'name': f"{model_name}_pruning_un_{target_u*coeff}_str_{target_s*coeff}", "param" : {"alpha":0.4,"lr":0.0001, "weight_decay":5e-4, "momentum":0.9}}
                 main(element["net"],para, f'{element["name"]}',10)
                 
-                model = load_and_make_permanent(f'./checkpoint/{model_name}_pruning_un_{target_u*coeff}_str_{target_s*coeff}/ckpt.pth')
+                model = load_and_make_permanent(f'./checkpoint/{model_name}_pruning_un_{target_u*coeff}_str_{target_s*coeff}/ckpt.pth', ModelClass, model_args)
                 model.to("cuda").eval().half()
                 score_value = score(model, target_s*coeff,target_u*coeff*(1-target_s*coeff), 16, 16)
                 _,_,acc_fine_tuned,_ = test(model, 0, testloader, "", criterion, 0,half=True)

@@ -39,7 +39,7 @@ if __name__ == "__main__":
             element = {'net' : model, 'name': f"{model_name}_Pruning_un_{ratio_value_unstructured}_str_{ratio_value_str}", "param" : {"alpha":0.4,"lr":0.0001, "weight_decay":5e-4, "momentum":0.9}}
             main(element["net"],para, f'{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}',20)
             
-            model = load_and_make_permanent(f'./checkpoint/{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}/ckpt.pth')
+            model = load_and_make_permanent(f'./checkpoint/{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}/ckpt.pth', ModelClass, model_args)
             model.to("cuda").half()
             _,_,acc_fine_tuned,_ = test(model, 0, testloader, "", criterion, 0, True)
             a = [ratio_value_unstructured, ratio_value_str, acc_prune, acc_fine_tuned, score_value]
