@@ -1,6 +1,6 @@
 from models import *
 import os
-from quant.main2 import main
+from quant.binary_connect_lilian.main2 import main
 
 net_test = [VGG('VGG19'),  ResNet18(),  PreActResNet18(),  GoogLeNet(), densenet_cifar(), DenseNet121(), ResNeXt29_2x64d(), MobileNet()
   ,MobileNetV2()
@@ -11,7 +11,7 @@ net_test = [VGG('VGG19'),  ResNet18(),  PreActResNet18(),  GoogLeNet(), densenet
   ,RegNetX_200MF()
   ,SimpleDLA()]
 
-from quant import binaryconnect
+from quant.binary_connect_lilian import binaryconnect
 
 name = [
     "VGG19",
