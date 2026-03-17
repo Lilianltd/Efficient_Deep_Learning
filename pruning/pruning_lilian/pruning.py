@@ -43,10 +43,7 @@ if __name__ == "__main__":
             score_value = score(model, ratio_value_str,ratio_value_unstructured*(1-ratio_value_str), 16, 16)
             model = load_model(MODEL_PATH, ModelClass, model_args)
             pruning(model, ratio_value_str, ratio_value_unstructured)
-            element = {'net' : model, 'name': f"{model_name}_Pruning_un_{ratio_value_unstructured}_str_{ratio_value_str}", "param" : {"alpha":0.4,"lr":0.0001, "weight_decay":5e-4, "momentum":0.9}}
-            main(element["net"],para, f'{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}',20)
-            
-            model = load_and_make_permanent(f'./checkpoint/{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}/ckpt.pth', ModelClass, model_args)
+            element = {'net' : model, 'name': f"{model_name}_Pruning_un_{ratio_value_unstructured}_str_{ratio_value_str}", "param" : {"alpha":0.4,"lr":0.0001, "weight_decay":5e-4, "momentum":0.9}}            
             if not distillation_flag:
                 main(element["net"],para, f'{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}',20)
             else:
