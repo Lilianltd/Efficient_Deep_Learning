@@ -54,7 +54,6 @@ if __name__ == "__main__":
             _,_,acc_fine_tuned,_ = test(model, 0, testloader, "", criterion, 0, True)
             a = [ratio_value_unstructured, ratio_value_str, acc_prune, acc_fine_tuned, score_value]
             if acc_fine_tuned < 88:
-
                 break
             import csv
 
