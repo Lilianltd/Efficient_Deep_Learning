@@ -9,6 +9,9 @@ from models import *
 from train_routine_lilian.main import test
 from train_routine_lilian.utils import load_data, mixup_criterion, mixup_data
 
+import os
+import torch
+
 def main(net, teacher_net, parameter, subfolder, num_run=200):
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     best_acc = 0

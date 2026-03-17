@@ -6,10 +6,7 @@ Mobile Networks for Classification, Detection and Segmentation" for more details
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 import torch.nn as nn
-
-
 
 class MobileNetV2_Custom(nn.Module):
     def __init__(self, num_classes=10, width_mult=1.0, depth_mult=1.0):
