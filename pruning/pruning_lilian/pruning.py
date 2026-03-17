@@ -4,12 +4,19 @@ from models import *
 from custom_utils import score, load_model
 from train_routine_lilian.main import main, test
 from train_routine_lilian.utils import load_data
+from distillation.distillation_train import main as main_distillation
+
 from .utils import *
 
 MODEL_PATH = '/homes/l22letar/EDL/pytorch-cifar/saved_checkpoint/MobileNetV2_custom_0.4_0.01_0.0005_0.9/ckpt.pth'
 ModelClass = MobileNetV2_Custom
 model_args = {"width_mult":0.5}
 model_name = "Mobilnet"
+distillation_flag = True 
+
+if distillation_flag:
+    teacher_path = "/homes/l22letar/EDL/pytorch-cifar/saved_checkpoint/DenseNet121_0.4_0.01_0.0005_0.9/ckpt.pth"
+    model_teacher = load_model(teacher_path, DenseNet121, {})
         
 if __name__ == "__main__":
     _, testloader, _ = load_data()
@@ -40,10 +47,17 @@ if __name__ == "__main__":
             main(element["net"],para, f'{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}',20)
             
             model = load_and_make_permanent(f'./checkpoint/{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}/ckpt.pth', ModelClass, model_args)
+            if not distillation_flag:
+                main(element["net"],para, f'{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}',20)
+            else:
+                main_distillation(element["net"],model_teacher ,para, f'{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}',20)
+
+            model = load_and_make_permanent(f'./checkpoint/{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}/ckpt.pth', ModelClass, model_args)
             model.to("cuda").half()
             _,_,acc_fine_tuned,_ = test(model, 0, testloader, "", criterion, 0, True)
             a = [ratio_value_unstructured, ratio_value_str, acc_prune, acc_fine_tuned, score_value]
             if acc_fine_tuned < 88:
+
                 break
             import csv
 
