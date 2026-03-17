@@ -9,6 +9,8 @@ import torch.nn.functional as F
 
 import torch.nn as nn
 
+
+
 class MobileNetV2_Custom(nn.Module):
     def __init__(self, num_classes=10, width_mult=1.0, depth_mult=1.0):
         super(MobileNetV2_Custom, self).__init__()
@@ -61,6 +63,34 @@ class MobileNetV2_Custom(nn.Module):
         out = self.linear(out)
         return out
 
+class MobileNetV2_Custom_Distillation_advanced(MobileNetV2_Custom):
+    def __init__(self, num_classes=10, width_mult=1.0, depth_mult=1.0):
+        super().__init__(num_classes=num_classes, width_mult=width_mult, depth_mult=depth_mult)     
+        self.stage_ends = []
+        current_layer_idx = 0
+        
+        for _, _, num_blocks, _ in self.cfg:
+            current_layer_idx += num_blocks
+            self.stage_ends.append(current_layer_idx - 1)
+            
+
+    def forward(self, x):
+        features = []
+        out = F.relu(self.bn1(self.conv1(x)))
+        
+        for i, layer in enumerate(self.layers):
+            out = layer(out)
+            
+            # Si l'index actuel correspond à la fin d'un bloc complet
+            if i in self.stage_ends:
+                features.append(out)
+                
+        out = F.relu(self.bn2(self.conv2(out)))
+        out = F.avg_pool2d(out, 4) # (Kernel size 4 pour CIFAR10, selon votre code initial)
+        out = out.view(out.size(0), -1)
+        final_logits = self.linear(out)
+        
+        return final_logits, features
 
 class Block(nn.Module):
     '''expand + depthwise + pointwise'''
