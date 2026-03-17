@@ -17,7 +17,7 @@ import os
 from sklearn.cluster import KMeans
 from models import DenseNet121, EfficientNetB0
 
-QUANTIZATION_BITS = 8 
+QUANTIZATION_BITS = 4
 N_LEVELS = 2**QUANTIZATION_BITS - 1 # -1 pour que ce soit symmetrique
 N_POS    = N_LEVELS // 2 # 
 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     print(f"Using device: {device}")
 
     # ── Load pruned+finetuned checkpoint ──────────────────────────────────────
-    checkpoint_path = '/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint/EfficientNet_unPXXF1.pth'
+    checkpoint_path = '/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint/EfficientNet_unP98.pth'
     print(f"==> Loading checkpoint from {checkpoint_path}..")
     if not os.path.exists(checkpoint_path):
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
@@ -147,7 +147,7 @@ if __name__ == '__main__':
 
     plt.tight_layout()
     # plt.show()
-    plt.savefig('wquantization_histograms.png')
+    plt.savefig('squantization_histograms.png')
 
     # ── Evaluate accuracy ─────────────────────────────────────────────────────
     print("==> Preparing data..")

@@ -91,8 +91,8 @@ print(
 )
 
 # remove
-# for module, param_name in parameters_to_prune:
-#     prune.remove(module, param_name)
+for module, param_name in parameters_to_prune:
+    prune.remove(module, param_name)
 
 # update history with current operation
 history.append(f'unP{int(pruning_ratio * 100)}')

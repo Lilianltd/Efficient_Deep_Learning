@@ -2,6 +2,7 @@
 __pycache__/*
 *.pyc
 checkpoint/*
+quent_checkpoint/*
 data/*
 .venv
 runs

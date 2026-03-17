@@ -1,6 +1,10 @@
 import torchinfo
 import torch
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 def score(model, ps, pu, qw, qa):
     model_ori_size = 11173962/2
     model_ori_compute_ops = 555432330/2
@@ -15,7 +19,7 @@ def score(model, ps, pu, qw, qa):
 
 from models import DenseNet121, EfficientNetB0
 # checkpoint = torch.load('./checkpoint/ckpt_densenet_lilian_pruned_quantized.pth', map_location='cpu')
-checkpoint = torch.load('./checkpoint/ckpt_efficientnetb0_structured_pruned_full.pth', map_location='cpu')
+checkpoint = torch.load('/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint/EfficientNet_sP65F10unP70F9Q8_full.pth', map_location='cpu')
 if isinstance(checkpoint, dict):
     state_dict = {k.replace('module.', ''): v for k, v in checkpoint['net'].items()}
     model = EfficientNetB0()
@@ -24,10 +28,10 @@ else:
     # checkpoint is the model itself
     model = checkpoint
 model = model.to('cuda').to(torch.float16)
-ps = 0.5
+ps = 0.65
 pu = (1-ps)*0.7
 # pu = 0.7
-qw = 16
+qw = 8
 qa = 16
 
 print(score(model, ps, pu, qw, qa))

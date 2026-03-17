@@ -5,13 +5,18 @@ import torchvision
 import torchvision.transforms as transforms
 import torch.backends.cudnn as cudnn
 
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from custom_utils import load_checkpoint_meta, save_checkpoint_meta
+
 import models
 from utils import progress_bar
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('Using device:', device)
 
-loaded_cpt = torch.load('checkpoint/ckpt_efficientnetb0_pruned.pth')
+loaded_cpt = torch.load('/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint/EfficientNet_unP98.pth')
 model = models.EfficientNetB0()
 new_state_dict={
     k.replace('module.',''):v for k,v in loaded_cpt['net'].items()
