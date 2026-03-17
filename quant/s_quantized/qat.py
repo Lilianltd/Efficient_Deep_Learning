@@ -21,7 +21,7 @@ from utils import progress_bar
 
 # ── Paramètres QAT ────────────────────────────────────────────────────────────
 X_BITS = 4  # Remplace par le nombre de bits souhaité pour les poids
-EPOCHS = 5
+EPOCHS = 2
 LR = 1e-5   # Learning rate très faible recommandé pour le QAT
 
 def test(model, testloader, device, criterion):
@@ -71,7 +71,7 @@ if __name__ == '__main__':
 
     # ── 2. Load Model ─────────────────────────────────────────────────────────
     # Utilise le modèle issu de getUnPruned_sPrune.py
-    checkpoint_path = 'checkpoint/ckpt_efficientnetb0_structured_pruned_full.pth' # A ADAPTER
+    checkpoint_path = '/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint/EfficientNet_sP65F10unP70F9Q8_full.pth'
     print(f'==> Loading unstructured pruned model from {checkpoint_path}..')
     
     try:
@@ -89,11 +89,15 @@ if __name__ == '__main__':
     print('==> Making unstructured pruning permanent and saving masks..')
     masks = {}
     for name, module in model.named_modules():
-        # Si le module a des hooks de pruning en attente (weight_orig)
-        if prune.is_pruned(module):
-            prune.remove(module, 'weight') # Fusionne weight_orig et le masque dans 'weight'
+        
+        # Vérification 100% fiable : on regarde si PyTorch a scindé le poids 
+        # en weight_orig et weight_mask (preuve absolue du pruning non-structuré)
+        if hasattr(module, 'weight_orig') and hasattr(module, 'weight_mask'):
+            prune.remove(module, 'weight') # Fusionne et nettoie
         
         # On sauvegarde les zéros comme un masque binaire pour le QAT
+        # (On le fait pour Conv2d et Linear, même s'ils n'ont pas été prunés,
+        # le masque sera juste rempli de 1, ce qui ne gêne pas)
         if isinstance(module, (nn.Conv2d, nn.Linear)):
             masks[name] = (module.weight != 0).float().to(device)
             

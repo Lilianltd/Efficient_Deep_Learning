@@ -48,7 +48,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('Using device:', device)
 
 # ── Load structurally pruned model (full object, architecture changed) ────────
-checkpoint_path = 'checkpoint/ckpt_efficientnetb0_structured_pruned_full.pth'
+checkpoint_path = '/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint/EfficientNet_sP65F10_full.pth'
 print(f'==> Loading structurally pruned model from {checkpoint_path}..')
 # Load meta from the regular .pth file
 regular_ckpt = checkpoint_path.replace('_full.pth', '.pth')
@@ -56,6 +56,7 @@ try:
     net_dict, history, ckpt = load_checkpoint_meta(regular_ckpt, device='cpu')
 except FileNotFoundError:
     history = []
+
 model = torch.load(checkpoint_path, map_location='cpu')
 model.eval()
 model = model.to(device)
@@ -68,6 +69,23 @@ for module in model.modules():
     if isinstance(module, torch.nn.Conv2d):
         parameters_to_prune.append((module, 'weight'))
 parameters_to_prune = tuple(parameters_to_prune)
+
+def count_params_and_zeros(m):
+    total = 0
+    zeros = 0
+    for module in m.modules():
+        if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear, torch.nn.BatchNorm2d)):
+            if hasattr(module, 'weight') and getattr(module, 'weight') is not None:
+                w = getattr(module, 'weight')
+                total += w.numel()
+                zeros += torch.sum(w == 0).item()
+            if hasattr(module, 'bias') and getattr(module, 'bias') is not None:
+                b = getattr(module, 'bias')
+                total += b.numel()
+                zeros += torch.sum(b == 0).item()
+    return total, zeros
+
+total_before, zeros_before = count_params_and_zeros(model)
 
 pruning_ratio = 0.7
 prune.global_unstructured(
@@ -132,17 +150,26 @@ print('Test accuracy with structured + unstructured pruning: %.3f%%' % acc)
 
 net_to_save = model.module if hasattr(model, 'module') else model
 
-# Append to history
 history.append(f'unP{int(pruning_ratio*100)}')
 
 save_dir = '/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint'
 out_path = save_checkpoint_meta(
 model=net_to_save,
 history=history,
-acc=acc, # no accuracy tested yet at this point, but handled later? Wait, it's tested after.
+acc=acc,
 save_dir=save_dir,
 un_pruning_ratio=pruning_ratio
 )
 save_path_full = out_path.replace('.pth', '_full.pth')
 torch.save(net_to_save, save_path_full)
 print(f'Full model saved to {save_path_full}')
+
+total_after, zeros_after = count_params_and_zeros(model)
+print("\n--- Bilan ---")
+print(f"Avant pruning non structuré :")
+print(f"  Nombre de paramètres total : {total_before:,}")
+print(f"  Nombre de paramètres nuls  : {zeros_before:,} ({zeros_before/total_before*100:.2f}%)")
+print(f"Après pruning non structuré :")
+print(f"  Nombre de paramètres total : {total_after:,}")
+print(f"  Nombre de paramètres nuls  : {zeros_after:,} ({zeros_after/total_after*100:.2f}%)")
+
