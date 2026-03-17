@@ -6,16 +6,14 @@ I'm playing with [PyTorch](http://pytorch.org/) on the CIFAR10 dataset.
 - Python 3.6+
 - PyTorch 1.0+
 
-## Training
-```
-# Start training with: 
-python main.py
+## How to run lilian's codes
 
-# You can manually resume the training with: 
-python main.py --resume --lr=0.01
-```
+### train_routine
+By changing code in the config batch_test variable and launching it with : python3 -m train_routine_lilian.main_batch it will train and saved the best accuracy weight file of the ask train schedule
+ 
 
-## Accuracy
+
+## Accuracy given as reference
 | Model             | Acc.        |
 | ----------------- | ----------- |
 | [VGG16](https://arxiv.org/abs/1409.1556)              | 92.64%      |

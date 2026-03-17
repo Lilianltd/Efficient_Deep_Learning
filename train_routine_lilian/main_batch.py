@@ -1,6 +1,5 @@
 from models import *
-import os
-from main import main
+from train_routine_lilian.main import main
 
 net_test = [MobileNetV2()
   ,MobileNetV2_Custom(width_mult=0.5, depth_mult=0.5)

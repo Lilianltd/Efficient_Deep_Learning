@@ -1,17 +1,12 @@
 import torch
-from train_routine_lilian.main import mixup_criterion, mixup_data, load_data
-'''Train CIFAR10 with PyTorch.'''
+import os
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
-
-import torchvision
-import torchvision.transforms as transforms
-import torchinfo
 from torch.utils.tensorboard import SummaryWriter
-import numpy as np
-import os
+
+from train_routine_lilian.main import mixup_criterion, mixup_data, load_data
 from models import *
 
 
