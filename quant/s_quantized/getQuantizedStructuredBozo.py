@@ -2,6 +2,10 @@
 Quantifie en poids un modèle pruné structurellement puis non-structurellement
 """
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from custom_utils import load_checkpoint_meta, save_checkpoint_meta
 import torch
 import torch.nn as nn
 import torchvision
@@ -77,8 +81,14 @@ if __name__ == '__main__':
     print(f"Using device: {device}")
 
     # ── Load structurally pruned model (full object, architecture changed) ────
-    checkpoint_path = './checkpoint/ckpt_efficientnetb0_structured_unstructured_pruned_full.pth'
+    checkpoint_path = '/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint/EfficientNet_sPXXF1unPXXF1_full.pth'
     print(f"==> Loading structurally pruned model from {checkpoint_path}..")
+    
+    try:
+        net_dict, history, ckpt = load_checkpoint_meta(checkpoint_path.replace('_full.pth', '.pth'), device=device)
+    except:
+        history = []
+        
     if not os.path.exists(checkpoint_path):
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
 
@@ -155,19 +165,20 @@ if __name__ == '__main__':
     print(f"  Test loss                                          : {loss_val:.4f}")
 
     # ── Save ──────────────────────────────────────────────────────────────────
-    # Save the full model object (architecture was modified by structural pruning)
-    out_path = './checkpoint/ckpt_efficientnetb0_structured_pruned_quantized_full.pth'
     net_to_save = model.module if hasattr(model, 'module') else model
+
+    history.append(f'Q{QUANTIZATION_BITS}')
+
+    out_path_dict = save_checkpoint_meta(
+        model=net_to_save,
+        history=history,
+        acc=acc,
+        save_dir='/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint',
+        levels=levels.tolist(),
+        bits=QUANTIZATION_BITS,
+        n_levels=N_LEVELS
+    )
+
+    out_path = out_path_dict.replace('.pth', '_full.pth')
     torch.save(net_to_save, out_path)
     print(f"==> Full quantized model saved to {out_path}")
-
-    # Also save a dict-style checkpoint
-    out_path_dict = './checkpoint/ckpt_efficientnetb0_structured_pruned_quantized.pth'
-    torch.save({
-        'net'     : net_to_save.state_dict(),
-        'acc'     : acc,
-        'levels'  : levels.tolist(),
-        'bits'    : QUANTIZATION_BITS,
-        'n_levels': N_LEVELS,
-    }, out_path_dict)
-    print(f"==> Dict checkpoint saved to {out_path_dict}")
