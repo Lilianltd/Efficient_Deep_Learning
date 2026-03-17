@@ -25,3 +25,90 @@ def score(model, ps, pu, qw, qa):
     return ((1-ps-pu)*qw/32*model_weight)/model_ori_size + ((1-ps)*max(qw,qa)/32*model_compute_ops)/model_ori_compute_ops
 
 
+
+import os
+
+def load_checkpoint_meta(path, device):
+    """Loads a checkpoint and extracts metadata. Works with dicts or naked models."""
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Checkpoint not found: {path}")
+    checkpoint = torch.load(path, map_location=device)
+    if isinstance(checkpoint, dict) and 'net' in checkpoint:
+        # It's an organized checkpoint
+        net = checkpoint['net']
+        history = checkpoint.get('history', [])
+    else:
+        # It's a raw model or state dict
+        net = checkpoint
+        history = []
+    
+    return net, history, checkpoint
+
+def save_checkpoint_meta(model, history, acc, save_dir, base_name="EfficientNet"):
+    """
+    Saves a checkpoint with an ordered history of operations.
+    history is a list of strings: ['unP50', 'sP30', 'F20', 'Q8']
+    """
+    os.makedirs(save_dir, exist_ok=True)
+    
+    # Construct filename based on history
+    history_str = "".join(history)
+    filename = f"{base_name}_{history_str}.pth" if history_str else f"{base_name}.pth"
+    out_path = os.path.join(save_dir, filename)
+    
+    state_to_save = model.module.state_dict() if hasattr(model, 'module') else model.state_dict()
+    
+    # Pack everything
+    checkpoint = {
+        'net': state_to_save,
+        'acc': acc,
+        'history': history
+    }
+    
+    torch.save(checkpoint, out_path)
+    print(f"==> Checkpoint saved to {out_path}")
+    return out_path
+
+import os
+
+def load_checkpoint_meta(path, device='cpu'):
+    """Loads a checkpoint and extracts metadata. Works with dicts or naked models."""
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Checkpoint not found: {path}")
+    checkpoint = torch.load(path, map_location=device)
+    if isinstance(checkpoint, dict) and 'net' in checkpoint:
+        # It's an organized checkpoint
+        net_dict = checkpoint['net']
+        history = checkpoint.get('history', [])
+    else:
+        # It's a raw model or state dict
+        net_dict = checkpoint
+        history = []
+    
+    return net_dict, history, checkpoint
+
+def save_checkpoint_meta(model, history, acc, save_dir, base_name="EfficientNet", **kwargs):
+    """
+    Saves a checkpoint with an ordered history of operations.
+    history is a list of strings: ['unP50', 'sP30', 'F20', 'Q8']
+    """
+    os.makedirs(save_dir, exist_ok=True)
+    
+    # Construct filename based on history
+    history_str = "".join(history)
+    filename = f"{base_name}_{history_str}.pth" if history_str else f"{base_name}.pth"
+    out_path = os.path.join(save_dir, filename)
+    
+    state_to_save = model.module.state_dict() if hasattr(model, 'module') else model.state_dict()
+    
+    # Pack everything
+    checkpoint = {
+        'net': state_to_save,
+        'acc': acc,
+        'history': history,
+        **kwargs
+    }
+    
+    torch.save(checkpoint, out_path)
+    print(f"==> Checkpoint saved to {out_path}")
+    return out_path

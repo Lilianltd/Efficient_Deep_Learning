@@ -2,6 +2,10 @@
 Prune structurellement un réseu non pruné
 """
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from custom_utils import load_checkpoint_meta, save_checkpoint_meta
 
 import torch
 import torch.nn as nn
@@ -13,7 +17,7 @@ import torch_pruning as tp
 import models
 from utils import progress_bar
 
-PRUNING_RATIO = 0.5
+PRUNING_RATIO = 0.7
 
 # ── Device ────────────────────────────────────────────────────────────────────
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -59,9 +63,10 @@ if __name__ == '__main__':
 
     # ── Load model ────────────────────────────────────────────────────────────
     print('==> Loading checkpoint..')
-    loaded_cpt = torch.load('checkpoint/ckpt_efficientnetb0.pth', map_location=device)
+    checkpoint_path = '/homes/q23tripa/Efficient_Deep_Learning/saved_checkpoint/EfficientNetB0_9098/ckpt.pth'
+    net_dict, history, ckpt = load_checkpoint_meta(checkpoint_path, device=device)
     model = models.EfficientNetB0()
-    new_state_dict = {k.replace('module.', ''): v for k, v in loaded_cpt['net'].items()}
+    new_state_dict = {k.replace('module.', ''): v for k, v in net_dict.items()}
     model.load_state_dict(new_state_dict)
     model = model.to(device)
 
@@ -113,17 +118,25 @@ if __name__ == '__main__':
     print(f'Acc: {acc_after:.2f}%')
 
     # ── Save ──────────────────────────────────────────────────────────────────
-    net_to_save = model.module if hasattr(model, 'module') else model
-    torch.save({
-        'net'            : net_to_save.state_dict(),
-        'acc'            : acc_after,
-        'epoch'          : 0,
-        'pruning_ratio'  : PRUNING_RATIO,
-        'params_before'  : params_before,
-        'params_after'   : params_after,
-    }, 'checkpoint/ckpt_efficientnetb0_structured_pruned.pth')
-    print('\nCheckpoint saved to checkpoint/ckpt_efficientnetb0_structured_pruned.pth')
 
+    net_to_save = model.module if hasattr(model, 'module') else model
+    
+    # Append to history
+    history.append(f'sP{int(PRUNING_RATIO*100)}')
+    
+    # Use save_checkpoint_meta
+    save_dir = '/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint'
+    out_path = save_checkpoint_meta(
+        model=net_to_save, 
+        history=history, 
+        acc=acc_after, 
+        save_dir=save_dir, 
+        pruning_ratio=PRUNING_RATIO, 
+        params_before=params_before, 
+        params_after=params_after
+    )
+    
     # Save the full model object so it can be reloaded without rebuilding the architecture
-    torch.save(net_to_save, 'checkpoint/ckpt_efficientnetb0_structured_pruned_full.pth')
-    print('Full model object saved to checkpoint/ckpt_efficientnetb0_structured_pruned_full.pth')
+    save_path_full = out_path.replace('.pth', '_full.pth')
+    torch.save(net_to_save, save_path_full)
+    print(f'Full model object saved to {save_path_full}')

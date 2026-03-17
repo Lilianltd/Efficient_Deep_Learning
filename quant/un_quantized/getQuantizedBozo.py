@@ -2,6 +2,10 @@
 Quantifie en POIDS un réseau pruné non-structurellement
 """
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from custom_utils import load_checkpoint_meta, save_checkpoint_meta
 import torch
 import torch.nn as nn
 import torchvision
@@ -81,13 +85,17 @@ if __name__ == '__main__':
     print(f"Using device: {device}")
 
     # ── Load pruned+finetuned checkpoint ──────────────────────────────────────
-    checkpoint_path = './checkpoint/ckpt_efficientnetb0_structured_pruned.pth'
+    checkpoint_path = '/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint/EfficientNet_unPXXF1.pth'
     print(f"==> Loading checkpoint from {checkpoint_path}..")
     if not os.path.exists(checkpoint_path):
         raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
 
-    checkpoint = torch.load(checkpoint_path, map_location=device)
-    state_dict  = checkpoint['net'] if 'net' in checkpoint else checkpoint
+    net_dict, history, checkpoint = load_checkpoint_meta(checkpoint_path, device=device)
+    state_dict  = net_dict
+    if isinstance(checkpoint, dict) and 'un_pruning_ratio' in checkpoint:
+        UN_PRUNING_RATIO = checkpoint['un_pruning_ratio']
+    else:
+        UN_PRUNING_RATIO = "XX"
     clean_state = {k.replace('module.', ''): v for k, v in state_dict.items()}
 
     model = EfficientNetB0()
@@ -160,18 +168,23 @@ if __name__ == '__main__':
 
     print("==> Testing quantized model..")
     acc, loss_val = test(model, testloader, device, criterion)
-    print(f"\n  Accuracy  (4-bit quantized + pruned): {acc:.2f}%")
+    print(f"\n  Accuracy  ({QUANTIZATION_BITS}-bit quantized + pruned): {acc:.2f}%")
     print(f"  Test loss                           : {loss_val:.4f}")
 
-    # ── Save ──────────────────────────────────────────────────────────────────
-    out_path   = './checkpoint/ckpt_efficientnetb0_pruned_quantized.pth'
+        # ── Save ──────────────────────────────────────────────────────────────────
     net_to_save = model.module if hasattr(model, 'module') else model
-    torch.save({
-        'net'     : net_to_save.state_dict(),
-        'acc'     : acc,
-        'levels'  : levels.tolist(),
-        'bits'    : QUANTIZATION_BITS,
-        'n_levels': N_LEVELS,
-    }, out_path)
-    print(f"==> Quantized model saved to {out_path}")
+    
+    history.append(f'Q{QUANTIZATION_BITS}')
+
+    out_path = save_checkpoint_meta(
+        model=net_to_save,
+        history=history,
+        acc=acc,
+        save_dir='/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint',
+        levels=levels.tolist(),
+        bits=QUANTIZATION_BITS,
+        n_levels=N_LEVELS,
+        un_pruning_ratio=UN_PRUNING_RATIO
+    )
+
 

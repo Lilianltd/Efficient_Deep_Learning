@@ -8,16 +8,24 @@ import torch.nn.utils.prune as prune
 
 import matplotlib.pyplot as plt
 
+import sys
+import os
+# Assure qu'on puisse importer depuis la racine (models, utils, custom_utils...)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
 import models
 from utils import progress_bar
+from custom_utils import load_checkpoint_meta, save_checkpoint_meta
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print('Using device:', device)
 
-loaded_cpt = torch.load('checkpoint/ckpt_efficientnetb0.pth')
+checkpoint_path = '/homes/q23tripa/Efficient_Deep_Learning/saved_checkpoint/EfficientNetB0_9098/ckpt.pth'
+net_dict, history, loaded_cpt = load_checkpoint_meta(checkpoint_path, device=device)
+
 model = models.EfficientNetB0()
 new_state_dict={
-    k.replace('module.',''):v for k,v in loaded_cpt['net'].items()
+    k.replace('module.',''):v for k,v in net_dict.items()
 } #va savoir pk tout commence par 'module.' dans le state dict
 model.load_state_dict(new_state_dict)
 model.eval()
@@ -86,11 +94,17 @@ print(
 # for module, param_name in parameters_to_prune:
 #     prune.remove(module, param_name)
 
+# update history with current operation
+history.append(f'unP{int(pruning_ratio * 100)}')
 
+save_dir = '/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint'
 # sauvegarde du modèle pruné
-torch.save({
-    'net': model.state_dict(),
-    'acc': 0, # on peut calculer l'acc du modèle pruné
-    'epoch': 0,
-    'pruning_ratio': pruning_ratio,
-}, 'checkpoint/ckpt_efficientnetb0_pruned.pth')
+save_checkpoint_meta(
+    model=model,
+    history=history,
+    acc=0, # on peut calculer l'acc du modèle pruné
+    save_dir=save_dir,
+    base_name='EfficientNet',
+    epoch=0,
+    un_pruning_ratio=pruning_ratio
+)

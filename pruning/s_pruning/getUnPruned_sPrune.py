@@ -2,6 +2,10 @@
 Prune unstructurellement un réseau pruné structurellement
 """
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from custom_utils import load_checkpoint_meta, save_checkpoint_meta
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -46,6 +50,12 @@ print('Using device:', device)
 # ── Load structurally pruned model (full object, architecture changed) ────────
 checkpoint_path = 'checkpoint/ckpt_efficientnetb0_structured_pruned_full.pth'
 print(f'==> Loading structurally pruned model from {checkpoint_path}..')
+# Load meta from the regular .pth file
+regular_ckpt = checkpoint_path.replace('_full.pth', '.pth')
+try:
+    net_dict, history, ckpt = load_checkpoint_meta(regular_ckpt, device='cpu')
+except FileNotFoundError:
+    history = []
 model = torch.load(checkpoint_path, map_location='cpu')
 model.eval()
 model = model.to(device)
@@ -101,22 +111,8 @@ print(
     )
 )
 
-# ── Save ──────────────────────────────────────────────────────────────────────
-# Save the full model object (architecture modified by structural pruning)
-net_to_save = model.module if hasattr(model, 'module') else model
-torch.save(net_to_save, 'checkpoint/ckpt_efficientnetb0_structured_unstructured_pruned_full.pth')
-print('Full model saved to checkpoint/ckpt_efficientnetb0_structured_unstructured_pruned_full.pth')
-
-# Also save dict-style checkpoint
-torch.save({
-    'net': net_to_save.state_dict(),
-    'acc': 0,
-    'epoch': 0,
-    'pruning_ratio': pruning_ratio,
-}, 'checkpoint/ckpt_efficientnetb0_structured_unstructured_pruned.pth')
-print('Dict checkpoint saved to checkpoint/ckpt_efficientnetb0_structured_unstructured_pruned.pth')
-
 # ── Test accuracy ─────────────────────────────────────────────────────────────
+
 print('\n==> Preparing data for accuracy test..')
 transform_test = transforms.Compose([
     transforms.ToTensor(),
@@ -131,3 +127,22 @@ criterion = nn.CrossEntropyLoss()
 
 acc = test(model, testloader, device, criterion, half=False)
 print('Test accuracy with structured + unstructured pruning: %.3f%%' % acc)
+
+# ── Save ──────────────────────────────────────────────────────────────────────
+
+net_to_save = model.module if hasattr(model, 'module') else model
+
+# Append to history
+history.append(f'unP{int(pruning_ratio*100)}')
+
+save_dir = '/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint'
+out_path = save_checkpoint_meta(
+model=net_to_save,
+history=history,
+acc=acc, # no accuracy tested yet at this point, but handled later? Wait, it's tested after.
+save_dir=save_dir,
+un_pruning_ratio=pruning_ratio
+)
+save_path_full = out_path.replace('.pth', '_full.pth')
+torch.save(net_to_save, save_path_full)
+print(f'Full model saved to {save_path_full}')
