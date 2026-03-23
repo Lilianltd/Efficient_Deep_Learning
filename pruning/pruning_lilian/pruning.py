@@ -5,27 +5,33 @@ from custom_utils import score, load_model
 from train_routine_lilian.main import main, test
 from train_routine_lilian.utils import load_data
 from distillation.distillation_train import main as main_distillation
+from distillation.custom_mobilnet_distillation import main as main_disti_mobilnet
 
 from .utils import *
 
-MODEL_PATH = '/homes/l22letar/EDL/pytorch-cifar/saved_checkpoint/MobileNetV2_custom_0.4_0.01_0.0005_0.9/ckpt.pth'
-ModelClass = MobileNetV2_Custom
-model_args = {"width_mult":0.5}
+MODEL_PATH = '/homes/l22letar/EDL/pytorch-cifar/saved_checkpoint/MobileNetV2_custom_0.5_0.5_disti_0.4_0.01_0.0005_0.9/ckpt.pth'
+ModelClass = MobileNetV2_Custom_Distillation_advanced
+model_args = {"width_mult":0.5, 'depth_mult': 0.5}
 model_name = "Mobilnet"
 distillation_flag = True 
+distillation_flag_mobilnet = True
 
-if distillation_flag:
+if distillation_flag and not distillation_flag_mobilnet:
     teacher_path = "/homes/l22letar/EDL/pytorch-cifar/saved_checkpoint/DenseNet121_0.4_0.01_0.0005_0.9/ckpt.pth"
     model_teacher = load_model(teacher_path, DenseNet121, {})
-        
+
+if distillation_flag and distillation_flag_mobilnet:
+    teacher_path = "./checkpoint/MobileNetV2/ckpt.pth"
+    model_teacher = load_model(teacher_path, MobileNetV2_Custom_Distillation_advanced, {"width_mult":1, "depth_mult":1})    
+
 if __name__ == "__main__":
     _, testloader, _ = load_data()
     criterion = torch.nn.CrossEntropyLoss()
 
     s = time.time()
 
-    ratios_unstructured = [0.5]
-    ratios_str = [0.1]
+    ratios_unstructured = [0.5, 0.5, 0.5, 0.6]
+    ratios_str = [0.1, 0.15, 0.2, 0.1]
     result = []
     for ratio_value_str in ratios_str:
         if ratio_value_str == 0:
@@ -46,9 +52,11 @@ if __name__ == "__main__":
             element = {'net' : model, 'name': f"{model_name}_Pruning_un_{ratio_value_unstructured}_str_{ratio_value_str}", "param" : {"alpha":0.4,"lr":0.0001, "weight_decay":5e-4, "momentum":0.9}}            
             if not distillation_flag:
                 main(element["net"],para, f'{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}',20)
-            else:
+            elif not distillation_flag_mobilnet:
                 main_distillation(element["net"],model_teacher ,para, f'{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}',20)
-
+            else:
+                main_disti_mobilnet(element["net"], model_teacher,para, f'{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}',25)
+                
             model = load_and_make_permanent(f'./checkpoint/{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}/ckpt.pth', ModelClass, model_args)
             model.to("cuda").half()
             _,_,acc_fine_tuned,_ = test(model, 0, testloader, "", criterion, 0, True)

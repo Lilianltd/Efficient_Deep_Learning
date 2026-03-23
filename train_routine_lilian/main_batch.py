@@ -4,20 +4,21 @@ from custom_utils import load_model, score
 from distillation.distillation_train import main as main_distillation
 from distillation.custom_mobilnet_distillation import main as main_distillation_mobilnet
 
-net_test = [MobileNetV2_Custom_Distillation_advanced(width_mult=0.5, depth_mult=0.5)
-  ,MobileNetV2_Custom(width_mult=0.5, depth_mult=1)
-  ,MobileNetV2_Custom(width_mult=0.75, depth_mult=0.5)
-  ,MobileNetV2_Custom(width_mult=0.5, depth_mult=0.75)
+net_test = [MobileNetV2_Custom_Distillation_advanced(width_mult=0.5, depth_mult=1)
+  ,MobileNetV2_Custom_Distillation_advanced(width_mult=0.75, depth_mult=0.5)
+  ,MobileNetV2_Custom_Distillation_advanced(width_mult=0.5, depth_mult=0.75)
 ]
 
 name = [
-    "MobileNetV2_custom_0.5_0.5_disti",
-    "MobileNetV2_custom_0.5_1",
-    "MobileNetV2_custom_0.75_0.5",
-    "MobileNetV2_custom_0.5_0.75"
+    "MobileNetV2_custom_0.5_1_disti",
+    "MobileNetV2_custom_0.75_0.5_disti",
+    "MobileNetV2_custom_0.5_0.75_disti"
 ]
 
-batch_test = {2 : {'net' : net_test[0], 'name': name[0], "param" : {"alpha":0.4,"lr":0.01, "weight_decay":5e-4, "momentum":0.9}, "distillation":{"teacher_path":"./checkpoint/MobileNetV2/ckpt.pth","model_obj":MobileNetV2_Custom_Distillation_advanced, "args":{"width_mult":1, "depth_mult":1}}}}
+batch_test = {1 : {'net' : net_test[0], 'name': name[0], "param" : {"alpha":0.4,"lr":0.01, "weight_decay":5e-4, "momentum":0.9}, "distillation":{"teacher_path":"./checkpoint/MobileNetV2/ckpt.pth","model_obj":MobileNetV2_Custom_Distillation_advanced, "args":{"width_mult":1, "depth_mult":1}}},
+              2 : {'net' : net_test[1], 'name': name[1], "param" : {"alpha":0.4,"lr":0.01, "weight_decay":5e-4, "momentum":0.9}, "distillation":{"teacher_path":"./checkpoint/MobileNetV2/ckpt.pth","model_obj":MobileNetV2_Custom_Distillation_advanced, "args":{"width_mult":1, "depth_mult":1}}},
+              3 : {'net' : net_test[2], 'name': name[2], "param" : {"alpha":0.4,"lr":0.01, "weight_decay":5e-4, "momentum":0.9}, "distillation":{"teacher_path":"./checkpoint/MobileNetV2/ckpt.pth","model_obj":MobileNetV2_Custom_Distillation_advanced, "args":{"width_mult":1, "depth_mult":1}}}}
+
 for k, element in batch_test.items():
   para = element["param"]
   if "distillation" in element.keys():

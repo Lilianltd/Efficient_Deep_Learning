@@ -6,3 +6,4 @@ data/*
 .venv
 runs
 *.log
+*.out

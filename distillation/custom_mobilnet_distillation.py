@@ -6,6 +6,7 @@ import torch.backends.cudnn as cudnn
 from torch.utils.tensorboard import SummaryWriter
 
 from models import *
+from custom_utils import load_model
 from train_routine_lilian.main import test
 from train_routine_lilian.utils import load_data, mixup_criterion, mixup_data
 
