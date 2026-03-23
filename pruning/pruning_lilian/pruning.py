@@ -21,8 +21,8 @@ if distillation_flag and not distillation_flag_mobilnet:
     model_teacher = load_model(teacher_path, DenseNet121, {})
 
 if distillation_flag and distillation_flag_mobilnet:
-    teacher_path = "./checkpoint/MobileNetV2/ckpt.pth"
-    model_teacher = load_model(teacher_path, MobileNetV2_Custom_Distillation_advanced, {"width_mult":1, "depth_mult":1})    
+    teacher_path = "./saved_checkpoint/MobileNetV2_custom_0.5_0.5_disti_0.4_0.01_0.0005_0.9/ckpt.pth"
+    model_teacher = load_model(teacher_path, MobileNetV2_Custom_Distillation_advanced, {"width_mult":0.5, "depth_mult":0.5})    
 
 if __name__ == "__main__":
     _, testloader, _ = load_data()
@@ -30,12 +30,10 @@ if __name__ == "__main__":
 
     s = time.time()
 
-    ratios_unstructured = [0.5, 0.5, 0.5, 0.6]
-    ratios_str = [0.1, 0.15, 0.2, 0.1]
+    ratios_unstructured = [0.1, 0.2, 0.45]
+    ratios_str = [0.1]
     result = []
     for ratio_value_str in ratios_str:
-        if ratio_value_str == 0:
-            continue
         for ratio_value_unstructured in ratios_unstructured:
             model = load_model(MODEL_PATH, ModelClass, model_args)
             element = {'net' : model, 'name': f"{model_name}_Pruning_un_{ratio_value_unstructured}_str_{ratio_value_str}", "param" : {"alpha":0.4,"lr":0.0001, "weight_decay":5e-4, "momentum":0.9}}
@@ -55,7 +53,7 @@ if __name__ == "__main__":
             elif not distillation_flag_mobilnet:
                 main_distillation(element["net"],model_teacher ,para, f'{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}',20)
             else:
-                main_disti_mobilnet(element["net"], model_teacher,para, f'{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}',25)
+                main_disti_mobilnet(element["net"], model_teacher,para, f'{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}',100)
                 
             model = load_and_make_permanent(f'./checkpoint/{element["name"]}_{para["alpha"]}_{para["lr"]}_{para["weight_decay"]}_{para["momentum"]}/ckpt.pth', ModelClass, model_args)
             model.to("cuda").half()
