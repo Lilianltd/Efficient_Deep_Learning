@@ -1,0 +1,175 @@
+"""
+Prune unstructurellement un réseau pruné structurellement
+"""
+
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+from custom_utils import load_checkpoint_meta, save_checkpoint_meta
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torchvision
+import torchvision.transforms as transforms
+import torch.backends.cudnn as cudnn
+import torch.nn.utils.prune as prune
+
+import matplotlib.pyplot as plt
+
+from utils import progress_bar
+
+
+def test(model, testloader, device, criterion, half=False):
+    model.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            if half:
+                inputs, targets = inputs.to(device).half(), targets.to(device)
+            else:
+                inputs, targets = inputs.to(device), targets.to(device)
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
+
+            test_loss += loss.item()
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+
+            progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+                         % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+    acc = 100.*correct/total
+    return acc
+
+
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print('Using device:', device)
+
+# ── Load structurally pruned model (full object, architecture changed) ────────
+checkpoint_path = '/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint/EfficientNet_sP65F10_full.pth'
+print(f'==> Loading structurally pruned model from {checkpoint_path}..')
+# Load meta from the regular .pth file
+regular_ckpt = checkpoint_path.replace('_full.pth', '.pth')
+try:
+    net_dict, history, ckpt = load_checkpoint_meta(regular_ckpt, device='cpu')
+except FileNotFoundError:
+    history = []
+
+model = torch.load(checkpoint_path, map_location='cpu')
+model.eval()
+model = model.to(device)
+if device == 'cuda':
+    model = torch.nn.DataParallel(model)
+    cudnn.benchmark = True
+
+parameters_to_prune = []
+for module in model.modules():
+    if isinstance(module, torch.nn.Conv2d):
+        parameters_to_prune.append((module, 'weight'))
+parameters_to_prune = tuple(parameters_to_prune)
+
+def count_params_and_zeros(m):
+    total = 0
+    zeros = 0
+    for module in m.modules():
+        if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear, torch.nn.BatchNorm2d)):
+            if hasattr(module, 'weight') and getattr(module, 'weight') is not None:
+                w = getattr(module, 'weight')
+                total += w.numel()
+                zeros += torch.sum(w == 0).item()
+            if hasattr(module, 'bias') and getattr(module, 'bias') is not None:
+                b = getattr(module, 'bias')
+                total += b.numel()
+                zeros += torch.sum(b == 0).item()
+    return total, zeros
+
+total_before, zeros_before = count_params_and_zeros(model)
+
+pruning_ratio = 0.7
+prune.global_unstructured(
+    parameters_to_prune,
+    pruning_method=prune.L1Unstructured,
+    amount=pruning_ratio,
+)
+
+sparsities = []
+# print sparsity
+for i in range(len(parameters_to_prune)):
+    module, param_name = parameters_to_prune[i]
+    print(
+        "Sparsity in {}.{}: {:.2f}%".format(
+            module.__class__.__name__,
+            param_name,
+            100. * float(torch.sum(getattr(module, param_name) == 0))
+            / float(getattr(module, param_name).nelement()),
+        )
+    )
+    sparsities.append(100. * float(torch.sum(getattr(module, param_name) == 0)) / float(getattr(module, param_name).nelement()))
+
+# plot the sparsity distribution across layers
+plt.figure(figsize=(10, 5))
+plt.bar(range(len(sparsities)), sparsities)
+plt.xlabel('Layer Index')
+plt.ylabel('Sparsity (%)')
+plt.ylim(0, 100)
+plt.title('Sparsity Distribution Across Layers (Structured + Unstructured)')
+plt.grid()
+plt.savefig('sparsity_distribution_structured.png')
+
+print(
+    "Global sparsity: {:.2f}%".format(
+        100. * float(
+            sum(torch.sum(getattr(module, param_name) == 0) for module, param_name in parameters_to_prune)
+        )
+        / float(
+            sum(getattr(module, param_name).nelement() for module, param_name in parameters_to_prune)
+        )
+    )
+)
+
+# ── Test accuracy ─────────────────────────────────────────────────────────────
+
+print('\n==> Preparing data for accuracy test..')
+transform_test = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+])
+testset = torchvision.datasets.CIFAR10(
+    root='./data', train=False, download=True, transform=transform_test)
+testloader = torch.utils.data.DataLoader(
+    testset, batch_size=100, shuffle=False, num_workers=2)
+
+criterion = nn.CrossEntropyLoss()
+
+acc = test(model, testloader, device, criterion, half=False)
+print('Test accuracy with structured + unstructured pruning: %.3f%%' % acc)
+
+# ── Save ──────────────────────────────────────────────────────────────────────
+
+net_to_save = model.module if hasattr(model, 'module') else model
+
+history.append(f'unP{int(pruning_ratio*100)}')
+
+save_dir = '/homes/q23tripa/Efficient_Deep_Learning/quent_checkpoint'
+out_path = save_checkpoint_meta(
+model=net_to_save,
+history=history,
+acc=acc,
+save_dir=save_dir,
+un_pruning_ratio=pruning_ratio
+)
+save_path_full = out_path.replace('.pth', '_full.pth')
+torch.save(net_to_save, save_path_full)
+print(f'Full model saved to {save_path_full}')
+
+total_after, zeros_after = count_params_and_zeros(model)
+print("\n--- Bilan ---")
+print(f"Avant pruning non structuré :")
+print(f"  Nombre de paramètres total : {total_before:,}")
+print(f"  Nombre de paramètres nuls  : {zeros_before:,} ({zeros_before/total_before*100:.2f}%)")
+print(f"Après pruning non structuré :")
+print(f"  Nombre de paramètres total : {total_after:,}")
+print(f"  Nombre de paramètres nuls  : {zeros_after:,} ({zeros_after/total_after*100:.2f}%)")
+
