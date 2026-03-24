@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from sklearn.cluster import KMeans
-from models import MobileNetV2_Custom
-from pruning.pruning import load_resnet_and_make_permanent
-from score import score
-from main import test
+from models import *
+from pruning.pruning_lilian.utils import load_and_make_permanent
+from custom_utils import score
+from train_routine_lilian.main import test
 
 QUANTIZATION_BITS = 8
 N_LEVELS = 2**QUANTIZATION_BITS - 1 # -1 pour que ce soit symmetrique
@@ -56,14 +56,17 @@ def quantize_model(model, levels):
                 indices = (w_flat.unsqueeze(-1) - levels_t).abs().argmin(dim=-1)
                 param.data = levels_t[indices].reshape(param.shape).to(param.device)
 
+MODEL_PATH = '/homes/l22letar/EDL/pytorch-cifar/saved_checkpoint/MobileNetV2_custom_0.4_0.01_0.0005_0.9/ckpt.pth'
+ModelClass = MobileNetV2_Custom
+model_args = {"width_mult":0.5}
+model_name = "Mobilnet"
 
 if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device}")
 
     # ── Load pruned+finetuned checkpoint ──────────────────────────────────────
-    checkpoint_path = './checkpoint/ResNetPruning_un_0.5_str_0.1_0.4_0.0001_0.0005_0.9/ckpt.pth'
-    model = load_resnet_and_make_permanent(checkpoint_path)
+    model = load_and_make_permanent(MODEL_PATH, ModelClass, model_args)
     model.to("cuda").eval().half()
     print(model)
     print(score(model, 0.1, 0.9*0.5, 8, 16))

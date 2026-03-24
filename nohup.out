@@ -1,0 +1,351 @@
+nohup: les entrées sont ignorées
+/homes/l22letar/EDL/pytorch-cifar/custom_utils.py:5: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+  loaded_cpt = torch.load(path)
+==> Preparing data..
+Files already downloaded and verified
+Files already downloaded and verified
+
+Epoch: 0
+Saving.. best_acc : 42.77
+
+Epoch: 1
+Saving.. best_acc : 55.91
+
+Epoch: 2
+
+Epoch: 3
+Saving.. best_acc : 61.59
+
+Epoch: 4
+Saving.. best_acc : 64.1
+
+Epoch: 5
+Saving.. best_acc : 67.54
+
+Epoch: 6
+Saving.. best_acc : 68.22
+
+Epoch: 7
+Saving.. best_acc : 71.13
+
+Epoch: 8
+Saving.. best_acc : 72.73
+
+Epoch: 9
+Saving.. best_acc : 73.08
+
+Epoch: 10
+Saving.. best_acc : 74.14
+
+Epoch: 11
+Saving.. best_acc : 76.54
+
+Epoch: 12
+Saving.. best_acc : 78.47
+
+Epoch: 13
+
+Epoch: 14
+
+Epoch: 15
+Saving.. best_acc : 79.49
+
+Epoch: 16
+Saving.. best_acc : 79.69
+
+Epoch: 17
+
+Epoch: 18
+
+Epoch: 19
+Saving.. best_acc : 80.64
+
+Epoch: 20
+Saving.. best_acc : 82.05
+
+Epoch: 21
+
+Epoch: 22
+
+Epoch: 23
+Saving.. best_acc : 82.99
+
+Epoch: 24
+
+Epoch: 25
+
+Epoch: 26
+
+Epoch: 27
+Saving.. best_acc : 83.82
+
+Epoch: 28
+Saving.. best_acc : 84.35
+
+Epoch: 29
+Saving.. best_acc : 84.99
+
+Epoch: 30
+Saving.. best_acc : 85.02
+
+Epoch: 31
+
+Epoch: 32
+Saving.. best_acc : 85.96
+
+Epoch: 33
+
+Epoch: 34
+
+Epoch: 35
+
+Epoch: 36
+Saving.. best_acc : 86.33
+
+Epoch: 37
+
+Epoch: 38
+
+Epoch: 39
+
+Epoch: 40
+Saving.. best_acc : 86.59
+
+Epoch: 41
+Saving.. best_acc : 87.4
+
+Epoch: 42
+
+Epoch: 43
+
+Epoch: 44
+
+Epoch: 45
+
+Epoch: 46
+
+Epoch: 47
+
+Epoch: 48
+
+Epoch: 49
+
+Epoch: 50
+
+Epoch: 51
+
+Epoch: 52
+Saving.. best_acc : 87.51
+
+Epoch: 53
+
+Epoch: 54
+Saving.. best_acc : 88.76
+
+Epoch: 55
+
+Epoch: 56
+
+Epoch: 57
+
+Epoch: 58
+
+Epoch: 59
+
+Epoch: 60
+Saving.. best_acc : 88.94
+
+Epoch: 61
+
+Epoch: 62
+
+Epoch: 63
+
+Epoch: 64
+
+Epoch: 65
+
+Epoch: 66
+Saving.. best_acc : 89.47
+
+Epoch: 67
+
+Epoch: 68
+
+Epoch: 69
+
+Epoch: 70
+
+Epoch: 71
+
+Epoch: 72
+
+Epoch: 73
+
+Epoch: 74
+
+Epoch: 75
+Saving.. best_acc : 90.01
+
+Epoch: 76
+
+Epoch: 77
+
+Epoch: 78
+
+Epoch: 79
+
+Epoch: 80
+Saving.. best_acc : 90.44
+
+Epoch: 81
+
+Epoch: 82
+
+Epoch: 83
+
+Epoch: 84
+
+Epoch: 85
+
+Epoch: 86
+
+Epoch: 87
+
+Epoch: 88
+Saving.. best_acc : 90.48
+
+Epoch: 89
+
+Epoch: 90
+Saving.. best_acc : 90.59
+
+Epoch: 91
+Saving.. best_acc : 90.97
+
+Epoch: 92
+
+Epoch: 93
+
+Epoch: 94
+Saving.. best_acc : 91.09
+
+Epoch: 95
+
+Epoch: 96
+Saving.. best_acc : 91.15
+
+Epoch: 97
+
+Epoch: 98
+Saving.. best_acc : 91.2
+
+Epoch: 99
+
+Epoch: 100
+
+Epoch: 101
+
+Epoch: 102
+Saving.. best_acc : 91.3
+
+Epoch: 103
+Saving.. best_acc : 91.44
+
+Epoch: 104
+
+Epoch: 105
+Saving.. best_acc : 91.7
+
+Epoch: 106
+
+Epoch: 107
+
+Epoch: 108
+Saving.. best_acc : 91.71
+
+Epoch: 109
+
+Epoch: 110
+
+Epoch: 111
+Saving.. best_acc : 91.81
+
+Epoch: 112
+Saving.. best_acc : 91.88
+
+Epoch: 113
+
+Epoch: 114
+
+Epoch: 115
+
+Epoch: 116
+
+Epoch: 117
+Saving.. best_acc : 92.2
+
+Epoch: 118
+
+Epoch: 119
+
+Epoch: 120
+
+Epoch: 121
+
+Epoch: 122
+
+Epoch: 123
+Saving.. best_acc : 92.34
+
+Epoch: 124
+
+Epoch: 125
+
+Epoch: 126
+Saving.. best_acc : 92.47
+
+Epoch: 127
+
+Epoch: 128
+
+Epoch: 129
+
+Epoch: 130
+
+Epoch: 131
+
+Epoch: 132
+
+Epoch: 133
+Saving.. best_acc : 92.55
+
+Epoch: 134
+
+Epoch: 135
+Saving.. best_acc : 92.75
+
+Epoch: 136
+
+Epoch: 137
+
+Epoch: 138
+
+Epoch: 139
+
+Epoch: 140
+
+Epoch: 141
+
+Epoch: 142
+
+Epoch: 143
+
+Epoch: 144
+Saving.. best_acc : 92.77
+
+Epoch: 145
+
+Epoch: 146
+
+Epoch: 147

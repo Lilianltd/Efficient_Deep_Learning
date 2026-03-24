@@ -119,6 +119,10 @@ def test(net, epoch, testloader, subfolder, criterion, best_acc, half=None):
                 inputs = inputs.to(device)
             targets = targets.to(device)    
             outputs = net(inputs)
+            
+            if isinstance(outputs, tuple):
+                outputs = outputs[0]
+
             loss = criterion(outputs.float(), targets)
 
             test_loss += loss.item()
